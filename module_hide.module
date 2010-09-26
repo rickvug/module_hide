@@ -95,6 +95,7 @@ function module_hide_get_hidden_list() {
   // Get a list of all modules marked as hidden
   $result = db_query('SELECT name FROM {system} WHERE hidden = 1');
 
+  $modules = array();
   // Turn result into a usable array.
   while ($row = db_fetch_array($result)) {
     $modules[] = $row['name'];
