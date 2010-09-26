@@ -1,0 +1,43 @@
+<?php
+
+/**
+ * Implements hook_install(). Add "hidden" field to the system table schema.
+ */
+function module_hide_install() {
+  $ret = array();
+
+  // Define the field that I am adding to the system table
+  $field = array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+  );
+
+  // Add this field
+  db_add_field($ret, 'system', 'hidden', $field);
+}
+
+/**
+ * Implements hook_schema_alter().
+ */
+//function module_hide_schema_alter() {
+  //@TODO Figure out if I need to alter the schema to account for the column
+  // that I added to the db. The comment code below may or may not be working.
+  // $schema['system'] = array(
+  //   'fields' => array(
+  // 	  'hidden' => array(
+  // 	    'description' => 'Boolean indicating whether or not this module or theme should be hidden.',
+  // 	    'type' => 'int',
+  // 	    'not null' => TRUE,
+  // 	    'default' => 0),
+  //   ),
+  // );
+//}
+
+/**
+ * Implements hook_uninstall().
+ */
+function module_hide_uninstall() {
+	  $ret = array();
+	  db_drop_field($ret, 'system', 'hidden');
+}

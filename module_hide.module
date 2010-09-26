@@ -1,0 +1,104 @@
+<?php
+
+/**
+ * Implementation of hook_menu().
+ */
+function module_hide_menu() {
+  $items = array();
+
+  $items['admin/settings/module_hide'] = array(
+    'title' => 'Hide Modules',
+    'description' => 'Administer the Module Hide module.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('module_hide_my_form'),
+    'access arguments' => array('administer site configuration'),
+  );
+
+  return $items;
+}
+
+/**
+ * Settings form.
+ */
+function module_hide_my_form() {
+  // Get modules list and create a checkbox for each one.
+  foreach (module_hide_get_module_status() as $key => $value) {
+    $form['modules'][$key] = array(
+      '#type' => 'checkbox',
+      '#title' => $key,
+      '#default_value' => $value,
+    );
+  }
+    
+  $form['create'] = array(
+    '#type' => 'submit',
+    '#value' => t('Create'),
+  );
+
+  return $form;
+}
+
+/**
+ * Form submit handler. Saves hidden value for each module in the system table.
+ */
+function module_hide_my_form_submit($form_id, $form_values) {
+  foreach ($form_values['values'] as $module => $hidden) {
+    db_query("UPDATE {system} SET hidden = %d WHERE name = '%s'", $hidden, $module);
+  }
+
+  drupal_set_message(t('Your settings have been saved.'));
+}
+
+/**
+ * Implementation of hook_system_info_alter().
+ *
+ **/
+function module_hide_system_info_alter(&$info, $file) {
+  // Grab the list of modules to be hidden, check if there is a match.
+  // @todo This appoach seems inefficient but I don't see a better way.
+  foreach (module_hide_get_hidden_list() as $module) {
+    if ($file->name == $module) {
+      // Note that prior to Drupal 6.21 core must be patched for modules to be hidden
+      // See http://drupal.org/node/764548#comment-3025492
+      $info['hidden'] = TRUE;
+    }
+  }
+}
+
+/**
+ * Return an array of all module machine names and their hidden status.
+ *
+ * @return array of module names and hidden status
+ */
+function module_hide_get_module_status() {
+  // Get a list of all modules. For each one I need the machine name and hidden status.
+  // @todo - I should be fetching the human readable name as well.
+  // @todo - Decide on sorting and grouping.
+  $result = db_query("SELECT name, hidden FROM {system} WHERE type = 'module'");  
+
+  // Turn this into a usable array.
+  while ($row = db_fetch_array($result)) {
+    $modules[$row['name']] = $row['hidden'];
+  }
+
+  return $modules;
+}
+
+/**
+ * Retrieves list of modules that should be hidden on the module listing page
+ * 
+ * @todo Is this still needed with module_hide_get_module_status()?
+ * 
+ * @return module names to be disabled
+ **/
+function module_hide_get_hidden_list() {
+  // Get a list of all modules marked as hidden
+  $result = db_query('SELECT name FROM {system} WHERE hidden = 1');
+
+  // Turn result into a usable array.
+  while ($row = db_fetch_array($result)) {
+    $modules[] = $row['name'];
+  }
+
+  return $modules;
+}

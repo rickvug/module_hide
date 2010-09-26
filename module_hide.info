@@ -1,0 +1,5 @@
+; $Id$
+name = Module Hide
+description = "Hide modules that you do not like."
+version = "6.x-1.x-dev"
+core = 6.x
